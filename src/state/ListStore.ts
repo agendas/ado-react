@@ -1,6 +1,6 @@
 import {TaskList} from "../core/models";
 import {List, Map} from "immutable";
-import deepFreeze from "deep-freeze-strict";
+import {makeImmutable, Optional} from "../core/utils";
 
 /**
  * Stores Lists across an entire application.
@@ -16,10 +16,10 @@ export class TaskListStore {
         /**
          * Immutable map of Lists this store holds, where the ID is the key.
          */
-
         private lists: Map<string, TaskList>,
+
         /**
-         * Immutable ordered list of list IDs this store holds.
+         * Immutable list of list IDs this store holds, ordered by location.
          */
         private listIds: List<string>
     ) {}
@@ -27,7 +27,7 @@ export class TaskListStore {
     /**
      * Initializes a new empty TaskListStore.
      */
-    public static make() {
+    public static make(): TaskListStore {
         return new TaskListStore(Map(), List());
     }
 
@@ -36,25 +36,25 @@ export class TaskListStore {
      *
      * @return an iterable object representing lists that this store holds
      */
-    public allLists() {
+    public all(): IterableIterator<TaskList> {
         return this.lists.values();
     }
 
     /**
-     * Gets all IDs of lists that this store holds.
+     * Gets all IDs of lists that this store holds, in order of location.
      *
      * @return an immutable ordered list of IDs
      */
-    public get orderedIds() {
+    public get orderedIds(): List<string> {
         return this.listIds;
     }
 
     /**
-     * Gets all lists that this store holds, in order of their ID.
+     * Gets all lists that this store holds, in order of their location.
      *
      * @return an immutable ordered list of TaskLists
      */
-    public get orderedLists() {
+    public get ordered(): List<TaskList> {
         return this.listIds.map(key => {
             return this.get(key)!;
         });
@@ -66,7 +66,7 @@ export class TaskListStore {
      * @param id ID of the list
      * @return the list with the specified ID, or undefined if it does not exist
      */
-    public get(id: string) {
+    public get(id: string): Optional<TaskList> {
         return this.lists.get(id);
     }
 
@@ -76,7 +76,7 @@ export class TaskListStore {
      * @param id ID to check for
      * @return whether the store contains a list with the specified ID
      */
-    public contains(id: string) {
+    public contains(id: string): boolean {
         return this.lists.has(id);
     }
 
@@ -87,14 +87,18 @@ export class TaskListStore {
      * @throws Error if list ID is not already in the store
      * @return a new store with the updated list
      */
-    public updating(list: TaskList) {
+    public updating(list: TaskList): TaskListStore {
         if (!this.lists.has(list.id)) {
             throw new Error("List not in store");
         }
 
-        deepFreeze(list);
+        if (this.get(list.id)!.location !== list.location) {
+            return this.deleting(list.id).adding(list);
+        } else {
+            makeImmutable(list);
 
-        return new TaskListStore(this.lists.set(list.id, list), this.listIds);
+            return new TaskListStore(this.lists.set(list.id, list), this.listIds);
+        }
     }
 
     /**
@@ -104,26 +108,26 @@ export class TaskListStore {
      * @throws Error if list ID is already in the store
      * @return a new store with the added list
      */
-    public adding(list: TaskList) {
+    public adding(list: TaskList): TaskListStore {
         if (this.lists.has(list.id)) {
             throw new Error("List already in store");
         }
 
-        deepFreeze(list);
+        makeImmutable(list);
 
         let index = 0;
         if (this.listIds.size > 0) {
-            if (this.listIds.last(undefined)! < list.id) {
+            if (this.get(this.listIds.last(undefined)!)!.location < list.location) {
                 index = this.listIds.size;
-            } else if (this.listIds.first(undefined)! <= list.id) {
+            } else if (this.get(this.listIds.first(undefined)!)!.location <= list.location) {
                 let start = 0;
                 let end = this.listIds.size - 1;
                 index = Math.floor((start + end) / 2);
 
                 while (start < end) {
-                    let value = this.listIds.get(index)!;
+                    let value = this.get(this.listIds.get(index)!)!.location;
 
-                    if (value > list.id) {
+                    if (value > list.location) {
                         end = index;
                     } else {
                         start = index + 1;
@@ -144,21 +148,23 @@ export class TaskListStore {
      * @throws Error if list ID is not already in the store
      * @return a new store with the deleted list
      */
-    public deleting(id: string) {
+    public deleting(id: string): TaskListStore {
         if (!this.lists.has(id)) {
             throw new Error("List ID not in store")
         }
+
+        const location = this.lists.get(id)!.location;
 
         let start = 0;
         let end = this.listIds.size - 1;
         let index = 0;
         while (start <= end) {
             index = Math.floor((start + end) / 2);
-            let value = this.listIds.get(index)!;
+            let value = this.get(this.listIds.get(index)!)!.location;
 
-            if (value === id) {
+            if (value === location) {
                 break;
-            } else if (value > id) {
+            } else if (value > location) {
                 end = index - 1;
             } else {
                 start = index + 1;
