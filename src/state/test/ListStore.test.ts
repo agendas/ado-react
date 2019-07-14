@@ -127,17 +127,16 @@ describe("deleting()", () => {
         const ids = ["1", "2", "1.1", "3", "0", "5", "4.4", "4", "2.5"];
 
         let store = TaskListStore.make();
-        ids.forEach(id => {
-            store = store.adding({id, location: id});
+        ids.forEach((id, idx) => {
+            store = store.adding({id: idx.toString(), location: id});
         });
 
         let sorted = Array.from(ids).sort();
 
-        ids.forEach(id => {
-            store = store.deleting(id);
+        ids.forEach((id, idx) => {
+            store = store.deleting(idx.toString());
             sorted.splice(sorted.indexOf(id), 1);
-            expect(store.orderedIds.toArray()).toEqual(sorted);
-            expect(store.ordered.map(list => list.id).toArray()).toEqual(sorted);
+            expect(store.ordered.map(list => list.location).toArray()).toEqual(sorted);
         });
     });
 });

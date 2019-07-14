@@ -153,25 +153,7 @@ export class TaskListStore {
             throw new Error("List ID not in store")
         }
 
-        const location = this.lists.get(id)!.location;
-
-        let start = 0;
-        let end = this.listIds.size - 1;
-        let index = 0;
-        while (start <= end) {
-            index = Math.floor((start + end) / 2);
-            let value = this.get(this.listIds.get(index)!)!.location;
-
-            if (value === location) {
-                break;
-            } else if (value > location) {
-                end = index - 1;
-            } else {
-                start = index + 1;
-            }
-        }
-
-        return new TaskListStore(this.lists.delete(id), this.listIds.delete(index));
+        return new TaskListStore(this.lists.delete(id), this.listIds.filter(el => el !== id));
     }
 }
 
