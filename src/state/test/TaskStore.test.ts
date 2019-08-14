@@ -1,7 +1,6 @@
 import {TaskStore} from "../TaskStore";
 import {Comparator, compareTasks} from "../../core/compare";
 import {DeadlineType, Task} from "../../core/models";
-import {createStore} from "redux";
 
 function expectInOrder(store: TaskStore, listId: string, comparator: Comparator<Task>) {
     const ordered = store.orderedTasks(listId)!;
