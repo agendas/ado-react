@@ -1,10 +1,11 @@
-import {AdoAction, AdoReducer, AdoState} from "./interfaces";
+import {AdoAction, AdoReducer, AdoState, AdoStateNamespaces} from "./interfaces";
 import {createStore, Store} from "redux";
+import modelReducer from "./model";
 
 export class ReducerRegistry {
     private reducers: Map<string, AdoReducer>;
 
-    public constructor(reducers: Map<string, AdoReducer> = new Map()) {
+    public constructor(reducers: Map<string, AdoReducer> = new Map([[AdoStateNamespaces.model, modelReducer]])) {
         this.reducers = reducers;
     }
 
@@ -28,7 +29,7 @@ export class ReducerRegistry {
         this.reducers.delete(namespace);
     }
 
-    public reduce(state: AdoState = {model: {lists: new Map(), tasks: new Map()}}, action: AdoAction): AdoState {
+    public reduce(state: AdoState = {}, action: AdoAction): AdoState {
         let reducer = this.reducers.get(action.namespace);
         if (reducer) {
             const newState = {...state};
@@ -43,4 +44,3 @@ export class ReducerRegistry {
         return createStore(this.reduce);
     }
 }
-
