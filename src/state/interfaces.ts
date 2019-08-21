@@ -1,11 +1,11 @@
 import {Task, TaskList} from "../core/models";
-import {Action, Reducer} from "redux";
+import {Action, AnyAction, Reducer} from "redux";
 
 export interface AdoState extends Record<string, any> {
     model?: ModelState;
 }
 
-export interface AdoAction extends Record<string, any>, Action {
+export interface AdoAction extends AnyAction {
     namespace: string;
 }
 
@@ -23,7 +23,7 @@ export interface ModelState {
 interface AdoModelBaseAction extends AdoAction {
     namespace: AdoStateNamespaces.model;
     type: AdoModelTypes;
-    action: AdoModelActions;
+    operation: AdoModelOperations;
 }
 
 export enum AdoModelTypes {
@@ -31,7 +31,7 @@ export enum AdoModelTypes {
     task = "task"
 }
 
-export enum AdoModelActions {
+export enum AdoModelOperations {
     add = "add",
     bulkAdd = "bulkAdd",
     set = "set",
@@ -42,13 +42,13 @@ export enum AdoModelActions {
 export interface AdoModelListAction extends AdoModelBaseAction {
     namespace: AdoStateNamespaces.model;
     type: AdoModelTypes.list;
-    action: AdoModelActions.add | AdoModelActions.set;
+    operation: AdoModelOperations.add | AdoModelOperations.set;
     list: TaskList;
 }
 
 export interface AdoModelTaskAction extends AdoModelBaseAction {
     type: AdoModelTypes.task;
-    action: AdoModelActions.add | AdoModelActions.set;
+    operation: AdoModelOperations.add | AdoModelOperations.set;
     listId: string;
     task: Task;
 }
@@ -56,20 +56,20 @@ export interface AdoModelTaskAction extends AdoModelBaseAction {
 export interface AdoModelListBulkAddAction extends AdoModelBaseAction {
     namespace: AdoStateNamespaces.model;
     type: AdoModelTypes.list;
-    action: AdoModelActions.bulkAdd;
+    operation: AdoModelOperations.bulkAdd;
     lists: TaskList[];
 }
 
 export interface AdoModelTaskBulkAddAction extends AdoModelBaseAction {
     namespace: AdoStateNamespaces.model;
     type: AdoModelTypes.task;
-    action: AdoModelActions.bulkAdd;
+    operation: AdoModelOperations.bulkAdd;
     listId: string;
     tasks: Task[];
 }
 
 interface AdoModelPropertyAction extends AdoModelBaseAction {
-    action: AdoModelActions.update;
+    operation: AdoModelOperations.update;
     id: string;
     property: string;
     value: any;
@@ -85,7 +85,7 @@ export interface AdoModelTaskPropertyAction extends AdoModelPropertyAction {
 }
 
 export interface AdoModelDeleteAction extends AdoModelBaseAction {
-    action: AdoModelActions.delete;
+    operation: AdoModelOperations.delete;
     listId: string;
     id: string;
 }

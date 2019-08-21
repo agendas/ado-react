@@ -5,8 +5,8 @@ export function isDefined(value: any) {
     return value !== undefined && value !== null;
 }
 
-export function makeImmutable<T>(o: T) {
-    deepFreezeStrict(deepSeal(o));
+export function makeImmutable<T>(o: T): T {
+    return deepFreezeStrict(deepSeal(o));
 }
 
 export type Optional<T> = T | undefined;
