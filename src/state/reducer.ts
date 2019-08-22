@@ -10,7 +10,7 @@ export class ReducerRegistry {
             this.reducers = reducers;
         } else {
             this.reducers = {};
-            this.reducers[AdoStateNamespaces.model] = [{property: "model", reducer: modelReducer}];
+            this.reducers[AdoStateNamespaces.model] = [{property: AdoStateNamespaces.model, reducer: modelReducer}];
         }
     }
 
