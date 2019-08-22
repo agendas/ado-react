@@ -55,6 +55,7 @@ describe("compareDeadlines()", () => {
          {type: DeadlineType.Date, date: 4}
       ];
       for (let i = 0; i < order.length; i++) {
+         expect(compareDeadlines(order[i], order[i])).toEqual(0);
          for (let j = i + 1; j < order.length; j++) {
             console.log(`Comparing date ${i + 1} with ${j + 1}`);
             expect(compareDeadlines(order[i], order[j])).toEqual(-1);
