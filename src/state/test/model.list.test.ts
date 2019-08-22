@@ -290,6 +290,14 @@ describe("Update", () => {
         expect(() => modelReducer(withList, {namespace, type, operation, id: add.list.id, property: "id", value: "1234"}))
             .toThrow(new Error("Attempt to change ID of list"));
     });
+
+    it("makes lists immutable", () => {
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: add.list.id, property: "asdf", value: {test: 2}});
+        expect(() => reduced.lists.get(add.list.id)!.asdf = "sdf").toThrow();
+        expect(() => reduced.lists.get(add.list.id)!.test = "sdf").toThrow();
+        expect(() => reduced.lists.get(add.list.id)!.asdf.test = "sdf").toThrow();
+        expect(() => reduced.lists.get(add.list.id)!.asdf.test2 = "sdf").toThrow();
+    });
 });
 
 describe("Delete", () => {
