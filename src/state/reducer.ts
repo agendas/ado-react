@@ -3,37 +3,36 @@ import {createStore, Store} from "redux";
 import modelReducer from "./model";
 
 export class ReducerRegistry {
-    private reducers: Map<string, AdoReducer>;
+    private readonly reducers: Record<string, {property: string, reducer: AdoReducer}[]>;
 
-    public constructor(reducers: Map<string, AdoReducer> = new Map([[AdoStateNamespaces.model, modelReducer]])) {
-        this.reducers = reducers;
-    }
-
-    public register(namespace: string, reducer: AdoReducer) {
-        if (this.reducers.has(namespace)) {
-            throw new Error(`Namespace "${namespace}" already exists in registry`);
+    public constructor(reducers?: Record<string, {property: string, reducer: AdoReducer}[]>) {
+        if (reducers) {
+            this.reducers = reducers;
+        } else {
+            this.reducers = {};
+            this.reducers[AdoStateNamespaces.model] = [{property: "model", reducer: modelReducer}];
         }
-
-        this.reducers.set(namespace, reducer);
     }
 
-    public isRegistered(namespace: string) {
-        return this.reducers.has(namespace);
-    }
-
-    public deregister(namespace: string) {
-        if (!this.reducers.has(namespace)) {
-            throw new Error(`Namespace ${namespace} does not exist in registry`);
-        }
-
-        this.reducers.delete(namespace);
+    public register(namespaces: string | string[], reducer: AdoReducer, property: string) {
+        let arr = typeof namespaces === "string" ? [namespaces] : namespaces;
+        let reducerObj = {property, reducer};
+        arr.forEach(namespace => {
+            if (this.reducers[namespace]) {
+                this.reducers[namespace].push(reducerObj);
+            } else {
+                this.reducers[namespace] = [reducerObj];
+            }
+        });
     }
 
     public reduce(state: AdoState = {}, action: AdoAction): AdoState {
-        let reducer = this.reducers.get(action.namespace);
-        if (reducer) {
-            const newState = {...state};
-            newState[action.namespace] = reducer(newState[action.namespace], action);
+        let reducers = this.reducers[action.namespace];
+        if (reducers) {
+            let newState = {...state};
+            reducers.forEach(({property, reducer}) => {
+                newState[property] = reducer(newState[property], action);
+            });
             return newState;
         } else {
             return state;
