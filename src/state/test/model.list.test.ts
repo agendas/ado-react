@@ -6,6 +6,8 @@ let namespace: AdoStateNamespaces.model = AdoStateNamespaces.model;
 
 let type: AdoModelTypes.list = AdoModelTypes.list;
 
+let add: AdoModelAction = {namespace, type, operation: AdoModelOperations.add, list: {id: "id", location: "1.2.3.4"}};
+
 describe("Add", () => {
     let operation: AdoModelOperations.add = AdoModelOperations.add;
 
@@ -245,11 +247,65 @@ describe("Update", () => {
         expect(reduced.lists.size).toEqual(0);
     });
 
-    /*
-     * TODO: Rest of model tests
-     * We need to make more complete tests to guarantee stability in future Ado versions,
-     * but as of now this isn't really a priority.
-     */
+    it("updates properties", () => {
+        let property = "asdf";
+        let value = "asdf2";
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: add.list.id, property, value});
+
+        let extraProps: Record<string, any> = {};
+        extraProps[property] = value;
+
+        expect(reduced.tasks.size).toEqual(1);
+        expect(reduced.lists.size).toEqual(1);
+        expect(reduced.lists.get(add.list.id)).toEqual(Object.assign({}, add.list, extraProps));
+        expect(reduced.lists.get(add.list.id)![property]).toEqual(value);
+    });
+
+    it("updates existing properties", () => {
+        let property = "location";
+        let value = "asdf2";
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: add.list.id, property, value});
+
+        let extraProps: Record<string, any> = {};
+        extraProps[property] = value;
+
+        expect(reduced.tasks.size).toEqual(1);
+        expect(reduced.lists.size).toEqual(1);
+        expect(reduced.lists.get(add.list.id)).toEqual(Object.assign({}, add.list, extraProps));
+        expect(reduced.lists.get(add.list.id)![property]).toEqual(value);
+    });
+
+    it("deep clones properties", () => {
+        let property = "asdf";
+        let test = {test: {test: 1}};
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: add.list.id, property, value: test});
+
+        test.test.test++;
+
+        expect(reduced.lists.get(add.list.id)![property].test.test).toEqual(test.test.test - 1);
+    });
+
+    it("throws on ID modification", () => {
+        let withList = modelReducer(state, add);
+        expect(() => modelReducer(withList, {namespace, type, operation, id: add.list.id, property: "id", value: "1234"}))
+            .toThrow(new Error("Attempt to change ID of list"));
+    });
+});
+
+describe("Delete", () => {
+    let operation: AdoModelOperations.delete = AdoModelOperations.delete;
+
+    it("deletes lists", () => {
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: add.list.id});
+        expect(reduced.tasks.size).toEqual(0);
+        expect(reduced.lists.size).toEqual(0);
+    });
+
+    it("ignores unknown IDs", () => {
+        let reduced = modelReducer(modelReducer(state, add), {namespace, type, operation, id: "thisisanunknownidblah"});
+        expect(reduced.tasks.size).toEqual(1);
+        expect(reduced.lists.size).toEqual(1);
+    });
 });
 
 export default undefined;
