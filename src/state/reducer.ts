@@ -40,6 +40,6 @@ export class ReducerRegistry {
     }
 
     public createStore(): Store<AdoState, AdoAction> {
-        return createStore(this.reduce);
+        return createStore(this.reduce.bind(this));
     }
 }

@@ -1,5 +1,5 @@
 import {Task, TaskList} from "../core/models";
-import {Action, AnyAction, Reducer} from "redux";
+import {AnyAction, Reducer} from "redux";
 
 export interface AdoState extends Record<string, any> {
     model?: ModelState;
