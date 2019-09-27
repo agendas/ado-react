@@ -1,18 +1,14 @@
-import {AdoAction} from "../../state/interfaces";
 import {TaskList} from "../../core/models";
-
-export const ChooserNamespace = "chooser";
 
 export interface ChooserState {
     selected: Set<string>;
 }
 
 export enum ChooserActionType {
-    select, deselect
+    select = "chooser:select", deselect = "chooser:deselect"
 }
 
-export interface ChooserAction extends AdoAction {
-    namespace: "chooser";
+export interface ChooserAction {
     type: ChooserActionType;
     id: string;
 }

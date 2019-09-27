@@ -1,45 +1,27 @@
-import {AdoAction, AdoReducer, AdoState, AdoStateNamespaces} from "./interfaces";
-import {createStore, Store} from "redux";
+import {AdoReducer, AdoState} from "./interfaces";
+import {AnyAction, createStore, Store} from "redux";
 import modelReducer from "./model";
 
 export class ReducerRegistry {
-    private readonly reducers: Record<string, {property: string, reducer: AdoReducer}[]>;
+    private readonly reducers: AdoReducer[];
 
-    public constructor(reducers?: Record<string, {property: string, reducer: AdoReducer}[]>) {
+    public constructor(reducers?: AdoReducer[]) {
         if (reducers) {
             this.reducers = reducers;
         } else {
-            this.reducers = {};
-            this.reducers[AdoStateNamespaces.model] = [{property: AdoStateNamespaces.model, reducer: modelReducer}];
+            this.reducers = [modelReducer];
         }
     }
 
-    public register(namespaces: string | string[], reducer: AdoReducer, property: string) {
-        let arr = typeof namespaces === "string" ? [namespaces] : namespaces;
-        let reducerObj = {property, reducer};
-        arr.forEach(namespace => {
-            if (this.reducers[namespace]) {
-                this.reducers[namespace].push(reducerObj);
-            } else {
-                this.reducers[namespace] = [reducerObj];
-            }
-        });
+    public register(reducer: AdoReducer) {
+        this.reducers.push(reducer);
     }
 
-    public reduce(state: AdoState = {}, action: AdoAction): AdoState {
-        let reducers = this.reducers[action.namespace];
-        if (reducers) {
-            let newState = {...state};
-            reducers.forEach(({property, reducer}) => {
-                newState[property] = reducer(newState[property], action);
-            });
-            return newState;
-        } else {
-            return state;
-        }
+    public reduce(state: AdoState = {}, action: AnyAction): AdoState {
+        return this.reducers.reduce((theState, reducer) => reducer(theState, action), state);
     }
 
-    public createStore(): Store<AdoState, AdoAction> {
+    public createStore(): Store<AdoState, AnyAction> {
         return createStore(this.reduce.bind(this));
     }
 }

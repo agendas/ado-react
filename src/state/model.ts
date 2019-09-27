@@ -1,13 +1,24 @@
-import {AdoAction, AdoModelAction, AdoModelOperations, AdoModelTypes, ModelState} from "./interfaces";
-import {makeImmutable} from "../core/utils";
+import {
+    AdoModelListAction,
+    AdoModelTaskAction,
+    AdoModelOperations,
+    AdoModelTypes,
+    AdoState,
+    ModelState
+} from "./interfaces";
+import {makeImmutable, Optional} from "../core/utils";
 import {cloneDeep} from "lodash";
+import {AnyAction} from "redux";
 
-export default function modelReducer(anyState: any = {tasks: new Map(), lists: new Map()}, anyAction: AdoAction): ModelState {
-    let state = anyState as ModelState;
-    let action = anyAction as AdoModelAction;
+export default function modelReducer(adoState: AdoState = {}, anyAction: AnyAction): AdoState {
+    let state = adoState.model || {tasks: new Map(), lists: new Map()};
+    let newModel: Optional<ModelState>;
+    let action: AdoModelListAction | AdoModelTaskAction;
 
-    switch (action.type) {
+    switch (anyAction.type) {
         case AdoModelTypes.list:
+            action = anyAction as AdoModelListAction;
+
             switch (action.operation) {
                 case AdoModelOperations.add:
                 case AdoModelOperations.set:
@@ -15,7 +26,9 @@ export default function modelReducer(anyState: any = {tasks: new Map(), lists: n
                     if (!tasks.has(action.list.id)) {
                         tasks = new Map([...tasks, [action.list.id, new Map()]]);
                     }
-                    return {tasks, lists: new Map([...state.lists, [action.list.id, makeImmutable(cloneDeep(action.list))]])};
+                    newModel = {tasks, lists: new Map([...state.lists, [action.list.id, makeImmutable(cloneDeep(action.list))]])};
+
+                    break;
 
                 case AdoModelOperations.bulkAdd:
                     let stateTasks = state.tasks;
@@ -29,7 +42,9 @@ export default function modelReducer(anyState: any = {tasks: new Map(), lists: n
                             stateTasks.set(list.id, new Map());
                         }
                     });
-                    return {tasks: stateTasks, lists: new Map([...state.lists].concat(action.lists.map(list => [list.id, makeImmutable(cloneDeep(list))])))};
+                    newModel = {tasks: stateTasks, lists: new Map([...state.lists].concat(action.lists.map(list => [list.id, makeImmutable(cloneDeep(list))])))};
+
+                    break;
 
                 case AdoModelOperations.update:
                     if (action.property === "id") {
@@ -40,39 +55,47 @@ export default function modelReducer(anyState: any = {tasks: new Map(), lists: n
                         let list = Object.assign({}, state.lists.get(action.id));
                         list[action.property] = cloneDeep(action.value);
 
-                        return {
+                        newModel = {
                             tasks: state.tasks,
                             lists: new Map([...state.lists, [action.id, makeImmutable(list)]])
                         };
-                    } else {
-                        return state;
                     }
 
+                    break;
+
                 case AdoModelOperations.delete:
-                    return {
+                    newModel = {
                         tasks: new Map([...state.tasks].filter(entry => entry[0] !== action.id)),
                         lists: new Map([...state.lists].filter(entry => entry[0] !== action.id))
                     };
+
+                    break;
             }
             break;
         case AdoModelTypes.task:
+            action = anyAction as AdoModelTaskAction;
+
             if (!state.tasks.has(action.listId)) {
-                return state;
+                break;
             }
 
             switch (action.operation) {
                 case AdoModelOperations.add:
                 case AdoModelOperations.set:
-                    return {
+                    newModel = {
                         lists: state.lists,
                         tasks: new Map([...state.tasks, [action.listId, new Map([...state.tasks.get(action.listId), [action.task.id, makeImmutable(cloneDeep(action.task))]])]])
                     };
 
+                    break;
+
                 case AdoModelOperations.bulkAdd:
-                    return {
+                    newModel = {
                         lists: state.lists,
                         tasks: new Map([...state.tasks, [action.listId, new Map([...state.tasks.get(action.listId)].concat(action.tasks.map(task => [task.id, makeImmutable(cloneDeep(task))])))]])
                     };
+
+                    break;
 
                 case AdoModelOperations.update:
                     if (action.property === "id") {
@@ -83,22 +106,24 @@ export default function modelReducer(anyState: any = {tasks: new Map(), lists: n
                         let task = Object.assign({}, state.tasks.get(action.listId)!.get(action.id));
                         task[action.property] = cloneDeep(action.value);
 
-                        return {
+                        newModel = {
                             lists: state.lists,
                             tasks: new Map([...state.tasks, [action.listId, new Map([...state.tasks.get(action.listId), [action.id, makeImmutable(task)]])]])
                         };
-                    } else {
-                        return state;
                     }
 
+                    break;
+
                 case AdoModelOperations.delete:
-                    return {
+                    newModel = {
                         tasks: new Map([...state.tasks, [action.listId, new Map([...state.tasks.get(action.listId)].filter(entry => entry[0] !== action.id))]]),
                         lists: state.lists
                     };
+
+                    break;
             }
             break;
     }
 
-    return anyState;
+    return newModel ? {...adoState, model: newModel} : adoState;
 }

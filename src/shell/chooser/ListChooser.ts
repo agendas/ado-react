@@ -1,10 +1,10 @@
 import {connect} from "react-redux";
 import ListChooserControl from "./ListChooserControl";
-import {AdoAction, AdoModelOperations, AdoModelTypes, AdoState, AdoStateNamespaces} from "../../state/interfaces";
-import {Dispatch} from "redux";
+import {AdoModelOperations, AdoModelTypes, AdoState} from "../../state/interfaces";
+import {AnyAction, Dispatch} from "redux";
 import uuidv4 from "uuid/v4";
 import {Optional} from "../../core/utils";
-import {ChooserActionType, ChooserNamespace, ChooserState} from "./interfaces";
+import {ChooserActionType, ChooserState} from "./interfaces";
 
 const emptySet = new Set<string>();
 
@@ -16,11 +16,10 @@ function mapStateToProps(state: AdoState) {
     };
 }
 
-function mapDispatchToProps(dispatch: Dispatch<AdoAction>) {
+function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
     return {
         onAddList(name: string) {
             dispatch({
-                namespace: AdoStateNamespaces.model,
                 type: AdoModelTypes.list,
                 operation: AdoModelOperations.add,
                 list: {
@@ -33,21 +32,18 @@ function mapDispatchToProps(dispatch: Dispatch<AdoAction>) {
         },
         onSelect(id: string) {
             dispatch({
-                namespace: ChooserNamespace,
                 type: ChooserActionType.select,
                 id
             });
         },
         onDeselect(id: string) {
             dispatch({
-                namespace: ChooserNamespace,
                 type: ChooserActionType.deselect,
                 id
             });
         },
         onDelete(id: string) {
             dispatch({
-                namespace: AdoStateNamespaces.model,
                 type: AdoModelTypes.list,
                 operation: AdoModelOperations.delete,
                 id,
