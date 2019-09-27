@@ -12,6 +12,7 @@ function mapStateToProps(state: AdoState) {
     let chooserState = state.chooser as Optional<ChooserState>;
     return {
         lists: state.model ? Array.from(state.model.lists.values()) : [],
+        listMap: state.model ? state.model.lists : undefined,
         selected: chooserState ? chooserState.selected : emptySet
     };
 }

@@ -1,4 +1,5 @@
 import {TaskList} from "../../core/models";
+import {Optional} from "../../core/utils";
 
 export interface ChooserState {
     selected: Set<string>;
@@ -16,6 +17,7 @@ export interface ChooserAction {
 export interface ListChooserProps {
     lists: TaskList[];
     selected: Set<string>;
+    listMap: Optional<Map<string, TaskList>>;
     onAddList(name: string): void;
     onSelect(id: string): void;
     onDeselect(id: string): void;

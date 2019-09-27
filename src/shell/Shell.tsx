@@ -1,17 +1,14 @@
 import * as React from "react";
 import App from "../react-quick-start/App";
 import ListChooser from "./chooser/ListChooser";
-import {CssBaseline} from "@material-ui/core";
-import {ThemeProvider} from "@material-ui/styles";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import "./shell.scss";
-import theme from "./theme";
 
 export default function Shell() {
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
+        <React.Fragment>
             <ListChooser />
             <App />
-        </ThemeProvider>
+        </React.Fragment>
     );
 }
